@@ -28,12 +28,12 @@ class Vampire {
       parent = parent.creator;
     }
     return count;
-  }
+  };
 
   // Returns true if this vampire is more senior than the other vampire. (Who is closer to the original vampire)
   isMoreSeniorThan(vampire) {
     return (this.numberOfVampiresFromOriginal < vampire.numberOfVampiresFromOriginal);
-  }
+  };
 
   /** Stretch **/
 
@@ -66,7 +66,64 @@ class Vampire {
     }
 
     return parent1;
+  };
+
+  /** Tree traversal methods **/
+
+  findVampireIncludeChildren = function(callback) {
+    if (callback(this)) {
+      return this;
+    } else {
+      let foundVampire = null;
+      for (const child of this.offspring) {
+        foundVampire = child.findVampireIncludeChildren(callback)
+        if (foundVampire) {
+          return foundVampire;
+        }
+      }
+      return null;
+    };
+  };
+
+  // Returns the vampire object with that name, or null if no vampire exists with that name
+  vampireWithName(name) {
+    return this.findVampireIncludeChildren(x => x.name === name);
+  };
+
+  addNumberDescendents = function() {
+    let count = 0;
+    if (Array.isArray(this.offspring)) {
+      count += this.offspring.length;
+      for (const child of this.offspring) {
+        count += child.addNumberDescendents();
+      }
+    }
+    return count;
+  };
+  
+  // Returns the total number of vampires that exist
+  get totalDescendents() {
+    return this.addNumberDescendents();
+  };
+  
+  getVampireListIncludeChildren = function(callback) {
+    let returnList = [];
+    if (callback(this)) {
+      returnList.push(this);
+    };
+    for (const child of this.offspring) {
+      const childList = child.getVampireListIncludeChildren(callback);
+      if (childList.length > 0) {
+        returnList = returnList.concat(childList);
+      }
+    }
+    return returnList;
   }
+
+  // Returns an array of all the vampires that were converted after 1980
+  get allMillennialVampires() {
+    return this.getVampireListIncludeChildren(x => x.yearConverted > 1980);
+  };
 }
 
 module.exports = Vampire;
